@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Student Predictor</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; width: 450px; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        /* Input Section */
+        h2 { margin-bottom: 25px; color: #1a1a1a; font-weight: 700; text-align: center; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        label { font-size: 12px; font-weight: 600; color: #6c757d; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        input { width: 100%; padding: 12px; border: 1px solid #e9ecef; border-radius: 8px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: #4a90e2; outline: none; background: #f0f7ff; }
+        
+        button { width: 100%; padding: 15px; background: #1a1a1a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #333; transform: translateY(-2px); }
+
+        /* Output Section */
+        #output-card { margin-top: 30px; padding: 20px; border-radius: 12px; display: none; text-align: center; border: 2px solid transparent; }
+        .pass-style { background: #e6fffa; border-color: #38b2ac; }
+        .fail-style { background: #fff5f5; border-color: #feb2b2; }
+        
+        .result-title { font-size: 24px; font-weight: 800; margin: 0; }
+        .confidence-tag { font-size: 14px; color: #4a5568; margin-top: 5px; display: block; }
+        .reasoning-box { margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.5); border-radius: 6px; font-size: 14px; color: #2d3748; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Student Analysis</h2>
+    
+    <div class="input-grid">
+        <div>
+            <label>Attendance (%)</label>
+            <input type="number" id="Attendance" placeholder="0-100">
+        </div>
+        <div>
+            <label>Internal Marks</label>
+            <input type="number" id="Internal_Marks" placeholder="0-100">
+        </div>
+        <div>
+            <label>Study Hours</label>
+            <input type="number" id="Study_Hours" placeholder="0-10">
+        </div>
+        <div>
+            <label>Assignment</label>
+            <input type="number" id="Assignment_Score" placeholder="0-100">
+        </div>
+    </div>
+    
+    <button onclick="getPrediction()">Generate Prediction</button>
+
+    <div id="output-card">
+        <h3 class="result-title" id="res_val">---</h3>
+        <span class="confidence-tag" id="res_conf"></span>
+        <div class="reasoning-box">
+            <strong>AI Insight:</strong> <span id="res_insight"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function getPrediction() {
+        const payload = {
+            Attendance: parseInt(document.getElementById('Attendance').value) || 0,
+            Internal_Marks: parseInt(document.getElementById('Internal_Marks').value) || 0,
+            Study_Hours: parseInt(document.getElementById('Study_Hours').value) || 0,
+            Assignment_Score: parseInt(document.getElementById('Assignment_Score').value) || 0
+        };
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            // Display Logic
+            const card = document.getElementById('output-card');
+            card.style.display = 'block';
+            card.className = data.prediction === "Pass" ? "pass-style" : "fail-style";
+            
+            document.getElementById('res_val').innerText = data.prediction.toUpperCase();
+            document.getElementById('res_conf').innerText = "Confidence: " + data.confidence;
+            document.getElementById('res_insight').innerText = data.insight;
+        } catch (err) {
+            alert("Error: Is your FastAPI server running?");
+        }
+    }
+</script>
+
+</body>
+</html>
